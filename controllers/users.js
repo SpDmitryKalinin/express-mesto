@@ -76,7 +76,7 @@ const updateAvatar = (req, res) => {
       return res.status(200).send(user);
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(400).send({ message: '400: Данные внесены некорректно.' });
       }
       res.status(500).send({ message: '500: Запрашиваемый ресурс не найден.' });

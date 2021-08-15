@@ -4,7 +4,7 @@ const {getUsers, getUser, createUser, updateAvatar, updateUser} = require('../co
 userRouter.get('/users', getUsers);
 userRouter.get('/users/:_id', getUser);
 userRouter.post('/users', createUser);
-userRouter.patch('/me', updateUser);
-userRouter.patch('/me/avatar', updateAvatar);
+userRouter.patch('/users/me', updateUser);
+userRouter.patch('/users/me/avatar', updateAvatar);
 
 module.exports = userRouter;

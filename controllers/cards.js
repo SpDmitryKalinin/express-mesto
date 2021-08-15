@@ -92,7 +92,7 @@ const dislikeCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(404).send({ message: '400: Некорректно внесены данные.'});
+        res.status(400).send({ message: '400: Некорректно внесены данные.'});
       }
       res.status(500).send({ message: '500: Ошибка на стороне сервера.'});
     });
