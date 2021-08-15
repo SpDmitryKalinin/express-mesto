@@ -1,25 +1,24 @@
 const Card = require('../models/card');
 
-//Функция получения всех карточек
+// Функция получения всех карточек
 const getCards = (req, res) => {
   Card.find({})
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: '404: данные карточек не найдены'});
+        res.status(404).send({ message: '404: данные карточек не найдены' });
         return;
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: '400: Некорректно внесены данные.'});
+        res.status(400).send({ message: '400: Некорректно внесены данные.' });
       }
-      res.status(500).send({ message: '500: Ошибка на стороне сервера.'});
+      res.status(500).send({ message: '500: Ошибка на стороне сервера.' });
     });
 };
 
-
-//Функция создания карточки
+// Функция создания карточки
 const createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
@@ -28,31 +27,31 @@ const createCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: '400: Некорректно внесены данные.'});
+        return res.status(400).send({ message: '400: Некорректно внесены данные.' });
       }
       return res.status(500).send(err);
     });
 };
 
-//Функция удаления карточки
+// Функция удаления карточки
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params._id)
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: '404: данные карточки не найдены.'});
+        res.status(404).send({ message: '404: данные карточки не найдены.' });
         return;
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: '400: Некорректно внесены данные.'});
+        res.status(400).send({ message: '400: Некорректно внесены данные.' });
       }
-      res.status(500).send({ message: '500: Ошибка на стороне сервера.'});
+      res.status(500).send({ message: '500: Ошибка на стороне сервера.' });
     });
 };
 
-//Функция лайка карточки
+// Функция лайка карточки
 const likeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params._id, {
@@ -61,20 +60,20 @@ const likeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        res.status(404).send({message: '404: данные карточки не найдены.'});
+        res.status(404).send({ message: '404: данные карточки не найдены.' });
         return;
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: '400: Некорректно внесены данные.'});
+        res.status(400).send({ message: '400: Некорректно внесены данные.' });
       }
-      res.status(500).send({ message: '500: Ошибка на стороне сервера.'});
+      res.status(500).send({ message: '500: Ошибка на стороне сервера.' });
     });
 };
 
-//Функция удаления карточки
+// Функция удаления карточки
 const dislikeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params._id,
@@ -85,19 +84,19 @@ const dislikeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: '404: данные карточки не найдены.'});
+        res.status(404).send({ message: '404: данные карточки не найдены.' });
         return;
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: '400: Некорректно внесены данные.'});
+        res.status(400).send({ message: '400: Некорректно внесены данные.' });
       }
-      res.status(500).send({ message: '500: Ошибка на стороне сервера.'});
+      res.status(500).send({ message: '500: Ошибка на стороне сервера.' });
     });
 };
 
 module.exports = {
-  getCards, createCard, deleteCard, likeCard, dislikeCard
+  getCards, createCard, deleteCard, likeCard, dislikeCard,
 };
