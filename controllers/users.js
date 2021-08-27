@@ -1,4 +1,6 @@
 const User = require('../models/user');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 // Функция получения данных всех пользователей
 const getUsers = (req, res) => {
@@ -31,9 +33,9 @@ const getUser = (req, res) => {
 
 // Функция создания пользователя
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+  const { name, about, avatar, email, password } = req.body;
+  bcrypt.hash(password, 10).then(hash => User.create({ name, about, avatar, email, password: hash}))
 
-  User.create({ name, about, avatar })
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -57,7 +59,7 @@ const updateUser = (req, res) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(400).send({ message: '400: Данные внесены некорректно.' });
       }
-      res.status(500).send({ message: '500: Запрашиваемый ресурс не найден.' });
+      res.status(500).send({ message: '500: Ошибка на сервере.' });
     });
 };
 
@@ -75,10 +77,52 @@ const updateAvatar = (req, res) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(400).send({ message: '400: Данные внесены некорректно.' });
       }
-      res.status(500).send({ message: '500: Запрашиваемый ресурс не найден.' });
+      res.status(500).send({ message: '500: Ошибка на сервере.' });
+    });
+};
+
+// Функция логин
+ const login = (req, res) =>{
+    const {email, password} = req.body;
+//   User.findOne({email}).select('+password')
+//     .then((user)=>{
+//       bcrypt.compare(password, user.password)
+//       .then((mathed) =>{
+//         if(!mathed){
+//           res.status(401).send({ message: '401: Неправильный пароль.' });
+//         }
+//         const token = jwt.sign({ _id: user._id }, { expiresIn: '7d' });
+//         console.log(token);
+//         return res.cookie('jwt', token, {
+//           maxAge: 3600000 * 24 * 7,
+//           httpOnly: true});
+//       })
+//     })
+//
+  User.findOne({email}).select('+password').then(()=>{
+    console.log("!!!");
+  })
+  .catch((err) => {
+    if (err.message === "IncorrectEmail") {
+      res.status(401).send({ message: '401: Неправильный email или пароль.' });
+    }
+    res.status(500).send({ message: '500: Ошибка на сервере.' });
+  });
+}
+
+// Информация о себе
+
+const getMyInfo = (req, res) => {
+  User.findById(req.user._id)
+    .then((user) => { res.status(200).send(user); })
+    .catch((err) => {
+      if (err.name === "CastError") {
+        res.status(401).send({ message: '401: Неправильный email или пароль.' });
+      }
+      res.status(500).send({ message: '500: Ошибка на сервере.' });
     });
 };
 
 module.exports = {
-  getUsers, getUser, createUser, updateUser, updateAvatar,
+  getUsers, getUser, createUser, updateUser, updateAvatar, login, getMyInfo
 };
