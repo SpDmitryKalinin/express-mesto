@@ -1,125 +1,145 @@
 const User = require('../models/user');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const BadRequest = require('../errors/BadRequest');
+const NotFoundError = require('../errors/NotFoundError');
+const Unauthorized = require('../errors/Unauthorized');
+const ServerError = require('../errors/ServerError');
 
 // Функция получения данных всех пользователей
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({}).then((users) => {
     res.status(200).send(users);
   })
     .catch(() => {
-      res.status(500).send({ message: '500: ошибка на сервере' });
+      next(new ServerError('500: ошибка на сервере'))
     });
 };
 
 // Функция получения данных пользователя
-const getUser = (req, res) => {
+const getUser = (req, res, next) => {
   User.findById(req.params._id)
     .then((user) => {
       if (user === null) {
-        return res.status(404).send({ message: '404: Пользователь с указанным id не найден' });
+        next(new NotFoundError('404: Пользователь с указанным id не найден'));
       }
 
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: '400: Ошибка в запросе' });
+        next(new BadRequest('400: Ошибка в запросе'))
       }
 
-      return res.status(500).send({ message: '500: ошибка на сервере' });
+      next(new ServerError('500: ошибка на сервере'))
     });
 };
 
 // Функция создания пользователя
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, about, avatar, email, password } = req.body;
-  bcrypt.hash(password, 10).then(hash => User.create({ name, about, avatar, email, password: hash}))
-
+  User.findOne({email}).then((user) =>{
+    if(user){
+      next(new NotFoundError('404: Пользователь с указанным email существует'));
+    }
+    bcrypt.hash(password, 10)
+    .then(hash => {
+      User.create({ name, about, avatar, email, password: hash})
+    })
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: '400: Данные введены некорректно' });
+        next(new BadRequest('400: Ошибка в запросе'))
       }
-      return res.status(500).send({ message: '500: Ошибка на сервере' });
+      next(new ServerError('500: ошибка на сервере'))
     });
-};
+  })
+}
+
 
 // Функция обновления имени и описания пользователя
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: '404: Пользователя с данным ID нет в БД.' });
+        next(new NotFoundError('404: Пользователя с данным ID нет в БД.'));
       }
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        res.status(400).send({ message: '400: Данные внесены некорректно.' });
+        next(new BadRequest('400: Ошибка в запросе'))
       }
-      res.status(500).send({ message: '500: Ошибка на сервере.' });
+      next(new ServerError('500: ошибка на сервере'))
     });
 };
 
 // Функция обновления аватара пользователя
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: '404: Пользователя с данным ID нет в БД.' });
+        next(new NotFoundError('404: Пользователя с данным ID нет в БД.'));
       }
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        res.status(400).send({ message: '400: Данные внесены некорректно.' });
+        next(new BadRequest('400: Ошибка в запросе'))
       }
-      res.status(500).send({ message: '500: Ошибка на сервере.' });
+      next(new ServerError('500: ошибка на сервере'))
     });
 };
 
 // Функция логин
- const login = (req, res) =>{
+ const login = (req, res, next) =>{
     const {email, password} = req.body;
-//   User.findOne({email}).select('+password')
-//     .then((user)=>{
-//       bcrypt.compare(password, user.password)
-//       .then((mathed) =>{
-//         if(!mathed){
-//           res.status(401).send({ message: '401: Неправильный пароль.' });
-//         }
-//         const token = jwt.sign({ _id: user._id }, { expiresIn: '7d' });
-//         console.log(token);
-//         return res.cookie('jwt', token, {
-//           maxAge: 3600000 * 24 * 7,
-//           httpOnly: true});
-//       })
-//     })
-//
-  User.findOne({email}).select('+password').then(()=>{
-    console.log("!!!");
-  })
-  .catch((err) => {
-    if (err.message === "IncorrectEmail") {
-      res.status(401).send({ message: '401: Неправильный email или пароль.' });
-    }
-    res.status(500).send({ message: '500: Ошибка на сервере.' });
-  });
+    User.findOne({email}).select('+password')
+    .then((user)=>{
+      if(!user){
+        next(new Unauthorized('401: Неправильный пароль.'))
+      }
+      return bcrypt.compare(password, user.password)
+        .then((mathed) =>{
+          if(!mathed){
+            next(new Unauthorized('401: Неправильный пароль.'))
+          }
+          return user;
+        })
+
+    })
+
+    .then((user) => {
+      const token = jwt.sign({_id: user._id}, 'secret-key', { expiresIn: '7d' });
+      return res
+        .status(201)
+        .cookie('jwt', token, {
+          maxAge: 3600000 * 24 * 7,
+          httpOnly: true
+        })
+        .send({ message: 'Авторизация успешно пройдена', token });
+    })
+
+    .catch((err) => {
+      if (err.message === "IncorrectEmail") {
+        next(new Unauthorized('401: Неправильный пароль.'))
+      }
+      next(new ServerError('500: ошибка на сервере'))
+    });
 }
 
 // Информация о себе
 
-const getMyInfo = (req, res) => {
+const getMyInfo = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => { res.status(200).send(user); })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(401).send({ message: '401: Неправильный email или пароль.' });
+        next(new Unauthorized('401: Неправильный пароль.'))
       }
-      res.status(500).send({ message: '500: Ошибка на сервере.' });
+      next(new ServerError('500: ошибка на сервере'))
     });
 };
 
