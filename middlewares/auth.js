@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
+const Unauthorized = require('../errors/Unauthorized');
 
 const { JWT_SECRET = 'secret-key' } = process.env;
 
 module.exports = (req, res, next) => {
-  console.log(req.cookies.jwt);
   if (!req.cookies.jwt) {
-    res.status(401).send({ message: '401: Неправильный email или пароль.' });
+    next(new Unauthorized('401: Неправильный email или пароль.'));
   }
   const token = req.cookies.jwt;
 
@@ -14,7 +14,7 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
-    res.status(401).send({ message: '401: Неправильный email или пароль.' });
+    next(new Unauthorized('401: Неправильный email или пароль.'));
   }
 
   req.user = payload;

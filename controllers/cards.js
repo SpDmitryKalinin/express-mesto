@@ -4,21 +4,20 @@ const NotFoundError = require('../errors/NotFoundError');
 const Unauthorized = require('../errors/Unauthorized');
 const ServerError = require('../errors/ServerError');
 
-
 // Функция получения всех карточек
 const getCards = (req, res, next) => {
   Card.find({})
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('404: данные карточек не найдены'))
+        next(new NotFoundError('404: данные карточек не найдены'));
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequest('400: Некорректно внесены данные.'))
+        next(new BadRequest('400: Некорректно внесены данные.'));
       }
-      next(new ServerError('500: ошибка на сервере'))
+      next(new ServerError('500: ошибка на сервере'));
     });
 };
 
@@ -31,26 +30,32 @@ const createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequest('400: Некорректно внесены данные.'))
+        next(new BadRequest('400: Некорректно внесены данные.'));
       }
-      next(new ServerError('500: ошибка на сервере'))
+      next(new ServerError('500: ошибка на сервере'));
     });
 };
 
 // Функция удаления карточки
 const deleteCard = (req, res, next) => {
+  const owner = req.user._id;
   Card.findByIdAndRemove(req.params._id)
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('404: данные карточек не найдены'))
+        next(new NotFoundError('404: данные карточек не найдены'));
+      } else {
+        if (String(card.owner) === owner) {
+          res.send(card);
+        }
+        next(new Unauthorized('Нельзя удалять чужие карточки'));
       }
-      res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequest('400: Некорректно внесены данные.'))
+        next(new BadRequest('400: Некорректно внесены данные.'));
+      } else {
+        next(new ServerError('500: ошибка на сервере'));
       }
-      next(new ServerError('500: ошибка на сервере'))
     });
 };
 
@@ -63,15 +68,15 @@ const likeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('404: данные карточек не найдены'))
+        next(new NotFoundError('404: данные карточек не найдены'));
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequest('400: Некорректно внесены данные.'))
+        next(new BadRequest('400: Некорректно внесены данные.'));
       }
-      next(new ServerError('500: ошибка на сервере'))
+      next(new ServerError('500: ошибка на сервере'));
     });
 };
 
@@ -86,15 +91,15 @@ const dislikeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('404: данные карточек не найдены'))
+        next(new NotFoundError('404: данные карточек не найдены'));
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequest('400: Некорректно внесены данные.'))
+        next(new BadRequest('400: Некорректно внесены данные.'));
       }
-      next(new ServerError('500: ошибка на сервере'))
+      next(new ServerError('500: ошибка на сервере'));
     });
 };
 

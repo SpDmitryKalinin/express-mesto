@@ -1,27 +1,26 @@
-
 const mongoose = require('mongoose');
-const {isEmail, isURL} = require("validator");
+const { isEmail, isURL } = require('validator');
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
     minlength: 2,
     maxlength: 30,
-    default: "Жак-Ив Кусто"
+    default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
     minlength: 2,
     maxlength: 30,
-    default: "Исследователь"
+    default: 'Исследователь',
   },
   avatar: {
     type: String,
     validate: {
       validator: (v) => isURL(v),
-      message: "Неправильный формат URL",
+      message: 'Неправильный формат URL',
     },
-    default: "https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png"
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
   },
   email: {
     type: String,
@@ -29,14 +28,14 @@ const userSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (email) => isEmail(email),
-      message: "Неправильный формат почты.",
+      message: 'Неправильный формат почты.',
     },
   },
   password: {
     type: String,
     minlength: 8,
     required: true,
-    select: false
+    select: false,
   },
 });
 
