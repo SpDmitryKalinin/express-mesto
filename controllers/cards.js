@@ -1,8 +1,8 @@
 const Card = require('../models/card');
 const BadRequest = require('../errors/BadRequest');
 const NotFoundError = require('../errors/NotFoundError');
-const Unauthorized = require('../errors/Unauthorized');
 const ServerError = require('../errors/ServerError');
+const Forbidden = require('../errors/Forbidden');
 
 // Функция получения всех карточек
 const getCards = (req, res, next) => {
@@ -39,15 +39,16 @@ const createCard = (req, res, next) => {
 // Функция удаления карточки
 const deleteCard = (req, res, next) => {
   const owner = req.user._id;
-  Card.findByIdAndRemove(req.params._id)
+  Card.findById(req.params._id)
     .then((card) => {
       if (!card) {
         next(new NotFoundError('404: данные карточек не найдены'));
       } else {
         if (String(card.owner) === owner) {
+          card.remove();
           res.send(card);
         }
-        next(new Unauthorized('Нельзя удалять чужие карточки'));
+        next(new Forbidden('403: Нельзя удалять чужие карточки'));
       }
     })
     .catch((err) => {
