@@ -43,19 +43,15 @@ const deleteCard = (req, res, next) => {
     .then((card) => {
       if (!card) {
         next(new NotFoundError('404: данные карточек не найдены'));
-      }
-      else {
-        if (String(card.owner) === owner) {
-          card.remove().then(() =>{
-            res.status(200).send(card);
-          })
-          .catch((err) =>{
+      } else if (String(card.owner) === owner) {
+        card.remove().then(() => {
+          res.status(200).send(card);
+        })
+          .catch(() => {
             next(new ServerError('500: ошибка на сервере'));
-          })
-        }
-        else{
-          next(new Forbidden('403: Нельзя удалять чужие карточки'));
-        }
+          });
+      } else {
+        next(new Forbidden('403: Нельзя удалять чужие карточки'));
       }
     })
     .catch((err) => {
@@ -100,8 +96,9 @@ const dislikeCard = (req, res, next) => {
     .then((card) => {
       if (!card) {
         next(new NotFoundError('404: данные карточек не найдены'));
+      } else {
+        res.send(card);
       }
-      res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
